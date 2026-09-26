@@ -33,48 +33,12 @@ const ALLOWED_ORIGINS = new Set(
   ORIGIN_LIST.map(normalizeOrigin).filter(Boolean)
 );
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      if (!origin) return cb(null, true);
-
-      const normalized = normalizeOrigin(origin);
-
-      if (
-        ALLOWED_ORIGINS.has("*") ||
-        ALLOWED_ORIGINS.has(normalized)
-      ) {
-        return cb(null, true);
-      }
-
-      console.warn(
-        "CORS blocked origin:",
-        origin,
-        "allowed:",
-        Array.from(ALLOWED_ORIGINS)
-      );
-
-      return cb(new Error("Origin not allowed"));
-    },
-
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS"
-    ],
-
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization"
-    ],
-
-    optionsSuccessStatus: 204
-  })
-);
-
+app.use(cors({
+  origin: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204
+}));
 const PORT = Number(process.env.PORT || 10000);
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
