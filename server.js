@@ -87,8 +87,14 @@ app.put("/api/state/:key",auth,async(req,res)=>{try{
   const key=req.params.key;if(!STATE_KEYS.includes(key))return res.status(404).json({error:"State key không hợp lệ."});
   const r=role(req.user.phan_quyen);if(!(STATE_WRITE[key]||[]).includes(r))return res.status(403).json({error:"Bạn không có quyền cập nhật dữ liệu này."});
   if(!Array.isArray(req.body))return res.status(400).json({error:"Dữ liệu phải là mảng JSON."});
-  const {data,error}=await supabase.from("app_state").upsert({key,value:req.body,updated_at:new Date().toISOString(),updated_by:req.user.id},{onConflict:"key"}).select("key,value,updated_at").single();
-  if(error)throw error;res.json({ok:true,data});
+  // Không trả lại toàn bộ JSON state sau khi lưu: state có thể rất lớn và
+  // việc SELECT lại toàn bộ payload làm tăng đáng kể thời gian chờ ở frontend.
+  const {error}=await supabase.from("app_state").upsert(
+    {key,value:req.body,updated_at:new Date().toISOString(),updated_by:req.user.id},
+    {onConflict:"key"}
+  );
+  if(error)throw error;
+  res.json({ok:true});
 }catch(e){res.status(500).json({error:"Không thể lưu dữ liệu dùng chung.",detail:e.message});}});
 
-app.listen(PORT,"0.0.0.0",()=>console.log("quanlydathang-api listening on "+PORT));
+app.listen(PORT,"0.0.0.0",()=>console.log("quanlydathang-api listening on "+PORT+" (v1.2 fast state writes)"));
